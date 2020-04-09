@@ -9,10 +9,15 @@ import "net/http"
 
 type Master struct {
 	// Your definitions here.
-
+	fileName []string
+	nReduce int
+	leftReduce int
 }
 
 // Your code here -- RPC handlers for the worker to call.
+func(m* Master) GetJobInfo(req *JobReq, rep* JobReply) {
+
+}
 
 //
 // an example RPC handler.
