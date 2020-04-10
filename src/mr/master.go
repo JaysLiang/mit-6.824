@@ -20,7 +20,7 @@ type Master struct {
 	mapBuckets [][]metaData
 	reduceBuckets [][]metaData
 	mu sync.Mutex
-	reduce int
+	nReduce int
 }
 
 // Your code here -- RPC handlers for the worker to call.
@@ -37,7 +37,7 @@ func(m* Master) GetJob(req *JobReq, reply* JobReply) {
 			if bucket[i].state == 0 {
 				reply.JobType = MapType
 				reply.TaskId = 1
-				reply.Reduce = m.reduce
+				reply.Reduce = m.nReduce
 				reply.MapInfo = &MapInfo{FileName:bucket[i].fileName}
 				bucket[i].state = 1
 			}
@@ -118,6 +118,7 @@ func MakeMaster(files []string, nReduce int) *Master {
 	m := Master{}
 
 	// Your code here.
+	m.nReduce = nReduce
 	m.mapBuckets = make([][]metaData, nReduce)
 	for idx:=range files {
 		bucket:=m.mapBuckets[idx%nReduce]
