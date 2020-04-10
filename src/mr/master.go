@@ -1,21 +1,53 @@
 package mr
 
-import "log"
+import (
+	"log"
+	"sync"
+	"time"
+)
 import "net"
 import "os"
 import "net/rpc"
 import "net/http"
 
+type metaData struct{
+	fileName string
+	state int
+}
 
 type Master struct {
 	// Your definitions here.
-	fileName []string
-	nReduce int
-	leftReduce int
+	mapBuckets [][]metaData
+	reduceBuckets [][]metaData
+	mu sync.Mutex
 }
 
 // Your code here -- RPC handlers for the worker to call.
-func(m* Master) GetJobInfo(req *JobReq, rep* JobReply) {
+func(m* Master) GetJob(req *JobReq, rep* JobReply) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for idx:=range m.mapBuckets {
+		bucket:=m.mapBuckets[idx]
+		if len(bucket) ==0 {
+			continue
+		}
+		for i:=range bucket {
+			if bucket[i].state == 0 {
+				rep.JobType = MapType
+				rep.MapInfo = &MapInfo{FileName:bucket[i].fileName}
+				bucket[i].state = 1
+			}
+		}
+	}
+
+}
+
+func (m* Master) ReportMapDone(req , resp) {
+
+}
+
+func (m *Master) ReportReduceDone(req, resp) {
 
 }
 
@@ -51,6 +83,26 @@ func (m *Master) Done() bool {
 	ret := false
 
 	// Your code here.
+	timer:= time.NewTimer(time.Second* 10)
+	for {
+		select {
+		case <-timer.C:
+			m.mu.Lock()
+
+			for idx := range m.buckets {
+				bucket := m.buckets[idx]
+				if len(bucket) == 0 {
+					continue
+				}
+				ret = false
+				break
+			}
+			m.mu.Unlock()
+			if ret {
+				break
+			}
+		}
+	}
 
 
 	return ret
@@ -63,7 +115,16 @@ func MakeMaster(files []string, nReduce int) *Master {
 	m := Master{}
 
 	// Your code here.
+	m.mapBuckets = make([][]metaData, nReduce)
+	for idx:=range files {
+		bucket:=m.mapBuckets[idx%nReduce]
+		bucket = append(bucket, metaData{
+			fileName: files[idx],
+			state:    0,
+		})
+	}
 
+	m.server()
 
 	return &m
 }

@@ -28,18 +28,22 @@ const (
 
 type MapInfo struct {
 	FileName string
+	ResFileName string
 }
 
 type ReduceInfo struct {
 	FileName string
+	ResFileName string
 }
 
 type JobReq struct {
 	JobType JobType
-	MapInfo *MapInfo
-	ReduceInfo* ReduceInfo
 }
 
 type JobReply struct {
-
+	JobType JobType
+	Reduce int
+	TaskId int
+	MapInfo *MapInfo
+	ReduceInfo *ReduceInfo
 }

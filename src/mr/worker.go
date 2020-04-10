@@ -1,6 +1,11 @@
 package mr
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"os"
+)
 import "log"
 import "net/rpc"
 import "hash/fnv"
@@ -25,13 +30,68 @@ func ihash(key string) int {
 }
 
 
+
+func CallGetJob() JobReply {
+	req:= JobReq{}
+	reply:= JobReply{}
+	s:=call("Master.GetJob", &req, &reply)
+	if !s {
+		log.Fatal("connect master failed! exit")
+	}
+	return reply
+}
+
+func CallMapDone() {
+
+}
+
+func WriteBucket(kva []KeyValue, taksId int, reduce int) {
+	reduceBucket:=make([][]KeyValue, reduce)
+	for idx:=range kva {
+		bucketIdx:=ihash(kva[idx].Key) / reduce
+		reduceBucket[bucketIdx] =append(reduceBucket[bucketIdx], kva[idx])
+	}
+
+	for i:=0 ; i< reduce; i++ {
+		fileName:=fmt.Sprintf("mr-%d-%d",taksId, i)
+		resFile, err := os.Open(fileName)
+		if err != nil {
+			log.Fatalf("cannot open %v", fileName)
+		}
+		enc:= json.NewEncoder(resFile)
+		for _, kv := range  reduceBucket[i] {
+			enc.Encode(&kv)
+		}
+		resFile.Close()
+	}
+}
+
 func Worker(mapf func(string, string) []KeyValue,
 	reducef func(string, []string) string) {
 
 	// Your worker implementation here.
-
 	// uncomment to send the Example RPC to the master.
 	// CallExample()
+	for {
+		reply:= CallGetJob()
+		switch reply.JobType {
+		case MapType:
+			file, err := os.Open(reply.MapInfo.FileName)
+			if err != nil {
+				log.Fatalf("cannot open %v", reply.MapInfo.FileName)
+			}
+			content, err := ioutil.ReadAll(file)
+			if err != nil {
+				log.Fatalf("cannot read %v", reply.MapInfo.FileName)
+			}
+			file.Close()
+			kva := mapf(reply.MapInfo.FileName, string(content))
+			WriteBucket(kva, reply.TaskId, reply.Reduce)
+			CallMapDone()
+		case ReduceType:
+
+		}
+	}
 
 }
 
