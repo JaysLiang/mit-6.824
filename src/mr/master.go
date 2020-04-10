@@ -20,10 +20,11 @@ type Master struct {
 	mapBuckets [][]metaData
 	reduceBuckets [][]metaData
 	mu sync.Mutex
+	reduce int
 }
 
 // Your code here -- RPC handlers for the worker to call.
-func(m* Master) GetJob(req *JobReq, rep* JobReply) {
+func(m* Master) GetJob(req *JobReq, reply* JobReply) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -34,8 +35,10 @@ func(m* Master) GetJob(req *JobReq, rep* JobReply) {
 		}
 		for i:=range bucket {
 			if bucket[i].state == 0 {
-				rep.JobType = MapType
-				rep.MapInfo = &MapInfo{FileName:bucket[i].fileName}
+				reply.JobType = MapType
+				reply.TaskId = 1
+				reply.Reduce = m.reduce
+				reply.MapInfo = &MapInfo{FileName:bucket[i].fileName}
 				bucket[i].state = 1
 			}
 		}
