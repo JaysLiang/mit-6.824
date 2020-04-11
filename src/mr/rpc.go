@@ -22,18 +22,19 @@ type ExampleReply struct {
 type JobType int
 
 const (
-	MapType JobType = 0
-	ReduceType JobType =1
+	MapType    JobType = 0
+	ReduceType JobType = 1
+	IdleType   JobType = 9999999
 )
 
 type MapInfo struct {
-	FileName string
+	FileName    string
 	ResFileName string
 }
 
 type ReduceInfo struct {
-	FileName string
-	ResFileName string
+	ReduceIdx int
+	Task      []int
 }
 
 type JobReq struct {
@@ -41,9 +42,22 @@ type JobReq struct {
 }
 
 type JobReply struct {
-	JobType JobType
-	Reduce int
-	TaskId int
-	MapInfo *MapInfo
+	JobType    JobType
+	Reduce     int
+	TaskId     int
+	MapInfo    *MapInfo
 	ReduceInfo *ReduceInfo
+}
+
+type MapDoneReq struct {
+	JobType JobType
+	TaskId  int
+}
+
+type EmtpyReply struct {
+}
+
+type ReduceDoneReq struct {
+	JobType   JobType
+	ReduceIdx int
 }

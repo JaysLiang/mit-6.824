@@ -1,2 +1,6 @@
 *.so
-/.idea
+/.idea/
+/src/main/mr-tmp
+/src/main/mrmaster
+/src/main/mrworker
+/src/main/mrsequential
