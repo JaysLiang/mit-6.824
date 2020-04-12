@@ -1,11 +1,14 @@
 # the raft consensus algorithm
 
+this doc is my note to reading the paper [raft-extend.pdf](./raft-extended.pdf)
+
 ## main step
 - select leader
 - leader accepts log entries from clients
 - leader decide and tell other replicates to apply to log entries to state machine
 
-## basic
+## basic conception
+
 ### server state
 - servers have only three state: leader, follower, candidate
 - leader decide apply log entry, candidate redirect request to leader to decide to apply log entry.
