@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
-	"time"
 )
 import "log"
 import "net/rpc"
@@ -158,7 +157,8 @@ func Worker(mapf func(string, string) []KeyValue,
 			ofile.Close()
 			CallReduceDone(reply.ReduceInfo.ReduceIdx)
 		case IdleType:
-			time.Sleep(time.Second * 2)
+			//time.Sleep(time.Millisecond * 100)
+			// no do nothing
 		}
 	}
 

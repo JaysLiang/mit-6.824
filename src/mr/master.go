@@ -47,6 +47,10 @@ func (m *Master) GetJob(req *JobReq, reply *JobReply) error {
 		m.mapBuckets[k] = v
 		return nil
 	}
+	if len(m.mapBuckets) != 0 {
+		reply.JobType = IdleType
+		return nil
+	}
 
 	for k, v := range m.reducePool {
 		if v.state == 1 && time.Since(v.start) < time.Second*10 {
@@ -133,33 +137,26 @@ func (m *Master) Done() bool {
 	ret := false
 
 	// Your code here.
-	timer := time.NewTimer(time.Second * 10)
-Loop:
-	for {
-		select {
-		case <-timer.C:
-			m.mu.Lock()
+	m.mu.Lock()
 
-			if len(m.mapBuckets) == 0 && len(m.reducePool) == 0 {
-				ret = true
-				m.mu.Unlock()
-				break Loop
-			}
-			for k, v := range m.mapBuckets {
-				if time.Since(v.start) > time.Second*10 {
-					v.state = 0
-					m.mapBuckets[k] = v
-				}
-			}
-			for k, v := range m.reducePool {
-				if time.Since(v.start) > time.Second*10 {
-					v.state = 0
-					m.reducePool[k] = v
-				}
-			}
-			m.mu.Unlock()
+	if len(m.mapBuckets) == 0 && len(m.reducePool) == 0 {
+		ret = true
+		m.mu.Unlock()
+		return ret
+	}
+	for k, v := range m.mapBuckets {
+		if time.Since(v.start) > time.Second*10 {
+			v.state = 0
+			m.mapBuckets[k] = v
 		}
 	}
+	for k, v := range m.reducePool {
+		if time.Since(v.start) > time.Second*10 {
+			v.state = 0
+			m.reducePool[k] = v
+		}
+	}
+	m.mu.Unlock()
 
 	return ret
 }
