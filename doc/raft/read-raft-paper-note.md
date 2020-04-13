@@ -34,3 +34,23 @@ this doc is my note to reading the paper [raft-extend.pdf](./raft-extended.pdf)
 - Request Vote 
 - Append Entries
 - transfer snapshots
+
+### leader election
+
+- followers keep follower state on condition receiving valid rpc message from candidate or leader
+- followers change it follwer state on condition election timeout
+- new election, increment current term, follower change it state to candidate, and vote for itself and start RequestVote RPC
+- candidate win election become a new leader
+- other candidate win election
+- timeout no leader elected
+
+
+### log replication
+
+- leader begin to handle client request. 
+- each client request contains a command.
+- leader append the command as a new entry
+- leader apply new entry to state machine and issue to followers in parallel
+- as picture show, each entry contains a term id and unique log index, leader's log always the newest
+
+![image](../../img/logs.png)
